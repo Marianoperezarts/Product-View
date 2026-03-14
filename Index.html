@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product View </title>
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#111;
+perspective:1200px;
+font-family:Arial, sans-serif;
+cursor:grab;
+touch-action:none;
+}
+
+.scene{
+width:400px;
+height:800px;
+position:relative;
+transform-style:preserve-3d;
+transform:rotateX(-20deg) rotateY(20deg);
+transition:transform .2s;
+}
+
+.face{
+position:absolute;
+border:4px solid #070504;
+background-size:cover;
+background-position:center;
+cursor:pointer;
+}
+
+/* Front / Back */
+
+.front,.back{
+width:400px;
+height:800px;
+}
+
+.front{
+transform:rotateY(0deg) translateZ(200px);
+}
+
+.back{
+transform:rotateY(180deg) translateZ(200px);
+}
+
+/* Left / Right */
+
+.left,.right{
+width:400px;
+height:800px;
+}
+
+.right{
+transform:rotateY(90deg) translateZ(200px);
+}
+
+.left{
+transform:rotateY(-90deg) translateZ(200px);
+}
+
+/* Top / Bottom */
+
+.top,.bottom{
+width:400px;
+height:400px;
+}
+
+.top{
+transform:rotateX(90deg) translateZ(200px);
+}
+
+.bottom{
+transform:rotateX(-90deg) translateZ(600px);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="scene" id="cube">
+
+<div class="face front"
+style="background-image:url('Faces_Green_1.jpg');"></div>
+
+<div class="face back"
+style="background-image:url('Faces_Green_2.jpg');"></div>
+
+<div class="face right"
+style="background-image:url('Faces_Green_3.jpg');"></div>
+
+<div class="face left"
+style="background-image:url('Faces_Green_4.jpg');"></div>
+
+<div class="face top"
+style="background-image:url('Faces_Green_5.jpg');"></div>
+
+<div class="face bottom"
+style="background-image:url('Faces_Green_6.jpg');"></div>
+
+</div>
+
+<script>
+
+const cube = document.getElementById("cube")
+
+let rotateX = -20
+let rotateY = 20
+let scale = 1
+let offsetX = 0
+let offsetY = 0
+
+let isDragging = false
+let startX
+let startY
+let startDistance = 0
+
+/* ---------- UPDATE TRANSFORM ---------- */
+
+function updateCube(){
+
+cube.style.transform =
+`translate(${offsetX}px,${offsetY}px)
+scale(${scale})
+rotateX(${rotateX}deg)
+rotateY(${rotateY}deg)`
+
+}
+
+/* ---------- CLICK NAV ---------- */
+
+cube.addEventListener("click",(e)=>{
+
+if(e.target.classList.contains("face")){
+
+const link = e.target.getAttribute("data-link")
+
+if(link) window.location.href = link
+
+}
+
+})
+
+/* ---------- DESKTOP DRAG ---------- */
+
+document.addEventListener("mousedown",(e)=>{
+
+isDragging = true
+startX = e.clientX
+startY = e.clientY
+document.body.style.cursor = "grabbing"
+
+})
+
+document.addEventListener("mousemove",(e)=>{
+
+if(!isDragging) return
+
+const dx = e.clientX - startX
+const dy = e.clientY - startY
+
+if(e.shiftKey){
+
+offsetX += dx
+offsetY += dy
+
+}else{
+
+rotateY += dx * .5
+rotateX -= dy * .5
+
+}
+
+startX = e.clientX
+startY = e.clientY
+
+updateCube()
+
+})
+
+document.addEventListener("mouseup",()=>{
+
+isDragging = false
+document.body.style.cursor = "grab"
+
+})
+
+/* ---------- MOUSE WHEEL ZOOM ---------- */
+
+document.addEventListener("wheel",(e)=>{
+
+e.preventDefault()
+
+scale += e.deltaY * -0.001
+scale = Math.min(Math.max(.3,scale),3)
+
+updateCube()
+
+},{passive:false})
+
+/* ================= MOBILE TOUCH ================= */
+
+document.addEventListener("touchstart",(e)=>{
+
+/* single finger rotate */
+
+if(e.touches.length === 1){
+
+isDragging = true
+startX = e.touches[0].clientX
+startY = e.touches[0].clientY
+
+}
+
+/* pinch start */
+
+if(e.touches.length === 2){
+
+startDistance = getDistance(e.touches)
+
+}
+
+})
+
+document.addEventListener("touchmove",(e)=>{
+
+/* rotate */
+
+if(e.touches.length === 1 && isDragging){
+
+const dx = e.touches[0].clientX - startX
+const dy = e.touches[0].clientY - startY
+
+rotateY += dx * .5
+rotateX -= dy * .5
+
+startX = e.touches[0].clientX
+startY = e.touches[0].clientY
+
+updateCube()
+
+}
+
+/* pinch zoom */
+
+if(e.touches.length === 2){
+
+let newDistance = getDistance(e.touches)
+
+scale += (newDistance - startDistance) * .005
+scale = Math.min(Math.max(.3,scale),3)
+
+startDistance = newDistance
+
+updateCube()
+
+}
+
+},{passive:false})
+
+document.addEventListener("touchend",()=>{
+
+isDragging = false
+
+})
+
+/* ---------- PINCH DISTANCE ---------- */
+
+function getDistance(touches){
+
+return Math.sqrt(
+
+Math.pow(touches[0].clientX - touches[1].clientX,2) +
+Math.pow(touches[0].clientY - touches[1].clientY,2)
+
+)
+
+}
+
+</script>
+
+</body>
+</html>
